@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\PostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,14 +21,25 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/', function () {
-    return response()->json('Welcome to the Blog API');
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/user', function (Request $request) {
+            return $request->user();
+        });
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
 });
 
 Route::prefix('posts')->group(function () {
     Route::get('/', [PostController::class, 'index']);
-    Route::get('/{id}', [PostController::class, 'find']);
-    Route::post('/', [PostController::class, 'store']);
-    Route::put('/{id}', [PostController::class, 'update']);
-    Route::delete('/{id}', [PostController::class, 'delete']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/{id}', [PostController::class, 'find']);
+        Route::post('/', [PostController::class, 'store']);
+        Route::put('/{id}', [PostController::class, 'update']);
+        Route::delete('/{id}', [PostController::class, 'delete']);
+    });
 });
